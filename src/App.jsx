@@ -7,7 +7,7 @@ function App() {
   return (
     <Router>
       <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
-        <h1 className="text-lg font-bold">TradePal</h1>
+        <h1 className="text-lg font-bold">CoinPal</h1>
         <div className="space-x-4">
           <Link to="/" className="hover:underline">
             Dashboard
