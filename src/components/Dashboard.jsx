@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import CoinCard from './CoinCard';
+import '../chartConfig'; // Register Chart.js components
 
 const Dashboard = () => {
   const [coins, setCoins] = useState([]);
   const [watchlist, setWatchlist] = useState(['bitcoin', 'ethereum', 'dogecoin', 'cardano', 'solana']);
+  const [historicalData, setHistoricalData] = useState({});
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    // Load watchlist from localStorage on mount
     const storedWatchlist = JSON.parse(localStorage.getItem('watchlist'));
     if (storedWatchlist) {
       setWatchlist(storedWatchlist);
     }
   }, []);
-  
+
   useEffect(() => {
+    // Save watchlist to localStorage whenever it changes
     localStorage.setItem('watchlist', JSON.stringify(watchlist));
   }, [watchlist]);
 
   useEffect(() => {
+    // Fetch coin data
     const fetchCoins = async () => {
       try {
         const responses = await Promise.all(
@@ -31,13 +37,70 @@ const Dashboard = () => {
       }
     };
 
+    // Fetch historical data for charts
+    const fetchHistoricalData = async () => {
+      try {
+        const historicalResponses = await Promise.all(
+          watchlist.map((coin) =>
+            axios.get(`https://api.coincap.io/v2/assets/${coin}/history?interval=d1`)
+          )
+        );
+        const historicalDataMap = {};
+        historicalResponses.forEach((res, index) => {
+          const coinId = watchlist[index];
+          historicalDataMap[coinId] = res.data.data.map((entry) => ({
+            date: entry.time,
+            price: parseFloat(entry.priceUsd),
+          }));
+        });
+        setHistoricalData(historicalDataMap);
+      } catch (error) {
+        console.error('Error fetching historical data:', error);
+      }
+    };
+
     fetchCoins();
+    fetchHistoricalData();
   }, [watchlist]);
 
-  const handleAddCoin = () => {
-    if (!watchlist.includes(search.toLowerCase()) && watchlist.length < 10) {
-      setWatchlist([...watchlist, search.toLowerCase()]);
-      setSearch('');
+  const handleAddCoin = async () => {
+    if (!search) return; // Ensure search input is not empty
+  
+    const normalizedInput = search.trim().toLowerCase(); // Normalize input
+    let coinId = ''; // Variable to store validated coin ID
+  
+    // Check if input ends with /usd (e.g., btc/usd)
+    if (normalizedInput.includes('/usd')) {
+      coinId = normalizedInput.split('/')[0]; // Extract coin symbol 
+    } else {
+      // Fetch all coins from the API and find a match
+      try {
+        const response = await axios.get('https://api.coincap.io/v2/assets');
+        const matchedCoin = response.data.data.find(
+          (coin) =>
+            coin.id === normalizedInput || // Match full coin ID 
+            coin.symbol.toLowerCase() === normalizedInput || // Match symbol 
+            coin.name.toLowerCase() === normalizedInput // Match name 
+        );
+  
+        if (matchedCoin) {
+          coinId = matchedCoin.id; // Assign validated coin ID
+        }
+      } catch (error) {
+        console.error('Error validating coin:', error);
+        alert('Error fetching coin data. Please try again later.');
+        return;
+      }
+    }
+  
+    // Validate coinId and ensure it's not a duplicate
+    if (coinId && !watchlist.includes(coinId)) {
+      setWatchlist([...watchlist, coinId]);
+      setSearch(''); // Clear search input
+    } else if (watchlist.includes(coinId)) {
+      alert('Coin is already in your watchlist.');
+    } else {
+      alert('Invalid coin. Please check your input.');
     }
   };
 
@@ -46,14 +109,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-10">
+    <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-10">
       <h1 className="text-2xl font-bold mb-6 text-center">Dashboard</h1>
 
       {/* Search & Add */}
       <div className="flex justify-center mb-6">
         <input
           type="text"
-          placeholder="Add a coin (e.g., polkadot)"
+          placeholder="Add a coin (e.g., DOT, polkadot, DOT/USD)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border border-gray-300 p-2 rounded-l-lg w-80"
@@ -70,18 +133,12 @@ const Dashboard = () => {
       {/* Coins Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {coins.map((coin) => (
-          <div key={coin.id} className="bg-gray-100 p-4 rounded-lg shadow relative flex flex-col items-center">
-
-            {/* Remove Button */}
-            <button onClick={() => handleRemoveCoin(coin.id)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-sm font-bold" aria-label="Remove">
-              ×
-            </button>
-            
-            {/* Coin Info */}
-            <h2 className="text-lg font-bold">{coin.name}</h2>
-            <p className="text-green-500">Price: ${parseFloat(coin.priceUsd).toFixed(2)}</p>
-            <p className="text-gray-600">Market Cap: ${parseFloat(coin.marketCapUsd).toFixed(2)}</p>
-          </div>
+          <CoinCard
+            key={coin.id}
+            coin={coin}
+            historicalData={historicalData}
+            handleRemoveCoin={handleRemoveCoin}
+          />
         ))}
       </div>
 
