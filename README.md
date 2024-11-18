@@ -1,8 +1,41 @@
-# React + Vite
+# CoinPal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+CoinPal is a cryptocurrency dashboard and trading tracker. It provides live price updates, a watchlist for tracking coins, and a trade tracker to manage buy and sell trades. The application is built using React, TailwindCSS, and CoinCap API.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Dashboard
+- Add cryptocurrencies to a watchlist.
+- Display live price, market cap, and a 7-day price trend chart for each coin.
+- Search functionality supports:
+  - Coin names (e.g., Bitcoin, bitcoin)
+  - Symbols (e.g., BTC, BTC/USD)
+  - Case-insensitive queries.
+
+### Trades
+- Buy and sell trades with quantity and live price tracking.
+- Display details for each trade:
+  - Coin (formatted as BTC/USD)
+  - Quantity
+  - Buy/Sell type
+  - Entry price, live P/L, and trade status (Open/Closed).
+- Automatic refresh of live P/L every 10 seconds.
+- Close trade functionality:
+  - Shows duration and calculates final P/L.
+  - Color-coded trade container: 
+    - **Blue** for profit.
+    - **Red** for loss.
+    - **Gray** for no change.
+
+## Technologies Used
+- **Frontend Framework:** React
+- **Styling:** TailwindCSS
+- **Charts:** Chart.js (via react-chartjs-2)
+- **API:** [CoinCap API](https://coincap.io/)
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd CoinPal
