@@ -6,15 +6,26 @@ import Trades from './components/Trades';
 function App() {
   return (
     <Router>
-      <nav>
-        <Link to="/">Dashboard</Link> | <Link to="/trades">Trades</Link>
+      <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
+        <h1 className="text-lg font-bold">TradePal</h1>
+        <div className="space-x-4">
+          <Link to="/" className="hover:underline">
+            Dashboard
+          </Link>
+          <Link to="/trades" className="hover:underline">
+            Trades
+          </Link>
+        </div>
       </nav>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/trades" element={<Trades />} />
-      </Routes>
+      <div className="p-4">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/trades" element={<Trades />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
+
 
 export default App;
